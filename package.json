@@ -1,0 +1,22 @@
+{
+  "name": "recipe-scaler",
+  "version": "0.1.0",
+  "description": "Scale recipe ingredients to a new serving size without the usual floating-point mess.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "tsc && node --test dist/test"
+  },
+  "license": "MIT",
+  "author": "nllee4",
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.5.4",
+    "@types/node": "^20.14.10"
+  }
+}
