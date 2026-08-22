@@ -5,7 +5,7 @@ import {
   pluralizeUnit,
 } from "./fraction.js";
 
-export { roundToKitchenFraction } from "./fraction.js";
+export { roundToKitchenFraction, parseQuantity } from "./fraction.js";
 export type { MixedNumber } from "./fraction.js";
 
 // Most ingredients scale in direct proportion to servings. A few don't:

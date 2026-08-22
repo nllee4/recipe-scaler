@@ -100,3 +100,71 @@ export function pluralizeUnit(unit: string, plural: boolean): string {
   }
   return `${unit}s`;
 }
+
+// Recipe text almost never has a decimal quantity typed in by a person -
+// it's "1 1/2 cups" or "1½ cups", not "1.5 cups". These are the vulgar
+// fraction glyphs whose denominators line up with KITCHEN_DENOMINATORS,
+// since those are the ones a recipe (and a set of measuring cups) actually use.
+const UNICODE_FRACTIONS: ReadonlyArray<[string, number, number]> = [
+  ["¾", 3, 4],
+  ["⅔", 2, 3],
+  ["⅜", 3, 8],
+  ["⅝", 5, 8],
+  ["⅞", 7, 8],
+  ["½", 1, 2],
+  ["⅓", 1, 3],
+  ["¼", 1, 4],
+  ["⅛", 1, 8],
+];
+
+// Parses quantities as a person would type them into a recipe: whole
+// numbers, decimals, simple fractions ("3/4"), mixed numbers ("1 1/2"),
+// and mixed numbers written with a unicode vulgar fraction ("1½").
+export function parseQuantity(input: string): number {
+  const trimmed = input.trim();
+  if (trimmed === "") {
+    throw new Error(`cannot parse "${input}" as a quantity`);
+  }
+
+  for (const [glyph, numerator, denominator] of UNICODE_FRACTIONS) {
+    if (trimmed.endsWith(glyph)) {
+      const wholePart = trimmed.slice(0, -glyph.length).trim();
+      if (wholePart === "") {
+        return numerator / denominator;
+      }
+      if (!/^\d+$/.test(wholePart)) {
+        throw new Error(`cannot parse "${input}" as a quantity`);
+      }
+      return Number(wholePart) + numerator / denominator;
+    }
+  }
+
+  const mixedMatch = trimmed.match(/^(\d+)\s+(\d+)\/(\d+)$/);
+  if (mixedMatch) {
+    const [, wholeStr, numeratorStr, denominatorStr] = mixedMatch;
+    return Number(wholeStr) + parseFractionPart(input, numeratorStr, denominatorStr);
+  }
+
+  const fractionMatch = trimmed.match(/^(\d+)\/(\d+)$/);
+  if (fractionMatch) {
+    const [, numeratorStr, denominatorStr] = fractionMatch;
+    return parseFractionPart(input, numeratorStr, denominatorStr);
+  }
+
+  const value = Number(trimmed);
+  if (!Number.isFinite(value)) {
+    throw new Error(`cannot parse "${input}" as a quantity`);
+  }
+  if (value < 0) {
+    throw new RangeError(`quantity cannot be negative: "${input}"`);
+  }
+  return value;
+}
+
+function parseFractionPart(original: string, numeratorStr: string, denominatorStr: string): number {
+  const denominator = Number(denominatorStr);
+  if (denominator === 0) {
+    throw new RangeError(`zero denominator in "${original}"`);
+  }
+  return Number(numeratorStr) / denominator;
+}

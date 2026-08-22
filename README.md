@@ -21,9 +21,10 @@ factor, but that falls apart in a few predictable ways:
   exactly one" — `1/2 cup` and `1 1/2 cups` are both idiomatic even
   though neither is a "normal" plural/singular split by value.
 
-This library handles the scaling math and the fraction rounding, and
-leaves everything else (parsing recipes from text, unit conversion, UI)
-out of scope.
+This library handles the scaling math, fraction rounding, and reading a
+quantity out of the fraction strings recipes are usually written with. It
+leaves everything else (parsing a full recipe from text, unit conversion,
+UI) out of scope.
 
 ## Usage
 
@@ -51,6 +52,23 @@ for (const ingredient of forSix.ingredients) {
 // 3 eggs
 // black pepper (to taste)
 ```
+
+## Parsing quantities
+
+Recipes are usually typed as fractions, not decimals. `parseQuantity`
+reads the formats a person actually writes:
+
+```ts
+import { parseQuantity } from "recipe-scaler";
+
+parseQuantity("2");      // 2
+parseQuantity("3/4");    // 0.75
+parseQuantity("1 1/2");  // 1.5
+parseQuantity("1½");     // 1.5
+```
+
+It throws on a zero denominator, a negative quantity, or text it can't
+parse at all.
 
 ## Ingredient scaling modes
 
