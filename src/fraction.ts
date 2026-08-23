@@ -65,6 +65,15 @@ export function roundToKitchenFraction(value: number): MixedNumber {
   return reduce(best as MixedNumber);
 }
 
+// For ingredients you can't measure a fraction of - eggs, vanilla beans,
+// slices of bread - snapping to the nearest whole number beats "3 1/2 eggs".
+export function roundToWholeUnit(value: number): number {
+  if (!Number.isFinite(value) || value < 0) {
+    throw new RangeError(`cannot express ${value} as a whole unit`);
+  }
+  return Math.round(value);
+}
+
 export function formatMixedNumber(mixed: MixedNumber): string {
   if (mixed.numerator === 0) {
     return String(mixed.whole);

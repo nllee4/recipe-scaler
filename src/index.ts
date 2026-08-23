@@ -1,5 +1,6 @@
 import {
   roundToKitchenFraction,
+  roundToWholeUnit,
   formatMixedNumber,
   isPluralQuantity,
   pluralizeUnit,
@@ -15,6 +16,12 @@ export type { MixedNumber } from "./fraction.js";
 //   like a single vanilla bean or a pan liner.
 export type ScalingBehavior = "linear" | "sqrt" | "fixed";
 
+// How a scaled quantity gets rounded for display. "fraction" (the default)
+// snaps to a kitchen measuring fraction. "whole" rounds to the nearest whole
+// number instead, for ingredients that only come in whole units - you can't
+// crack half an egg or slice a fraction of a vanilla bean.
+export type RoundingMode = "fraction" | "whole";
+
 export interface Ingredient {
   // Descriptive text appended after the amount, e.g. "flour". Leave empty
   // when the unit itself is the noun, e.g. { unit: "egg", name: "" }.
@@ -23,6 +30,7 @@ export interface Ingredient {
   quantity: number;
   unit: string;
   scaling?: ScalingBehavior;
+  rounding?: RoundingMode;
 }
 
 export interface Recipe {
@@ -67,7 +75,12 @@ export function scaleRecipe(recipe: Recipe, targetServings: number): Recipe {
   };
 }
 
-export function formatQuantity(quantity: number, unit: string): string {
+export function formatQuantity(quantity: number, unit: string, rounding: RoundingMode = "fraction"): string {
+  if (rounding === "whole") {
+    const whole = roundToWholeUnit(quantity);
+    const unitPart = pluralizeUnit(unit, whole !== 1);
+    return unitPart ? `${whole} ${unitPart}` : String(whole);
+  }
   const mixed = roundToKitchenFraction(quantity);
   const numberPart = formatMixedNumber(mixed);
   const unitPart = pluralizeUnit(unit, isPluralQuantity(mixed));
@@ -78,6 +91,6 @@ export function formatIngredient(ingredient: Ingredient): string {
   if (ingredient.quantity === 0) {
     return `${ingredient.name || ingredient.unit} (to taste)`;
   }
-  const amount = formatQuantity(ingredient.quantity, ingredient.unit);
+  const amount = formatQuantity(ingredient.quantity, ingredient.unit, ingredient.rounding ?? "fraction");
   return ingredient.name ? `${amount} ${ingredient.name}` : amount;
 }

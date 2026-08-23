@@ -84,6 +84,23 @@ Each ingredient can set `scaling` to one of:
 An ingredient with `quantity: 0` (e.g. "salt, to taste") is left at zero
 under every scaling mode.
 
+## Rounding modes
+
+Scaling can turn a whole ingredient into an awkward quantity - two eggs
+scaled from 4 servings to 7 comes out to 3.5 eggs. Set `rounding` on an
+ingredient to control how the final quantity is displayed:
+
+- `"fraction"` (default): rounds to the nearest kitchen fraction (halves,
+  thirds, quarters, eighths). Use this for anything you measure by volume
+  or weight.
+- `"whole"`: rounds to the nearest whole number. Use this for ingredients
+  that only come in whole units, like eggs or slices of bread.
+
+```ts
+const eggs = { name: "", quantity: 2, unit: "egg", rounding: "whole" as const };
+formatIngredient({ ...eggs, quantity: 3.5 }); // "4 eggs", not "3 1/2 eggs"
+```
+
 ## Development
 
 There's no build step required to read the source; `src/index.ts` and

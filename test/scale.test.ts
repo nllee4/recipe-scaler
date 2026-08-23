@@ -62,6 +62,37 @@ test("formatQuantity rounds to a kitchen-friendly fraction and pluralizes correc
   }
 });
 
+test("formatQuantity rounds to a whole number when the rounding mode is 'whole'", () => {
+  const cases: Array<{ description: string; quantity: number; unit: string; expected: string }> = [
+    { description: "rounds down to the nearest whole egg", quantity: 3.4, unit: "egg", expected: "3 eggs" },
+    { description: "rounds up to the nearest whole egg", quantity: 3.6, unit: "egg", expected: "4 eggs" },
+    { description: "exactly one whole unit is singular", quantity: 1, unit: "egg", expected: "1 egg" },
+    { description: "rounding down to zero is still allowed", quantity: 0.4, unit: "egg", expected: "0 eggs" },
+  ];
+
+  for (const { description, quantity, unit, expected } of cases) {
+    assert.equal(formatQuantity(quantity, unit, "whole"), expected, description);
+  }
+});
+
+test("formatIngredient uses an ingredient's own rounding mode", () => {
+  const eggs = { name: "", quantity: 3.5, unit: "egg", rounding: "whole" as const };
+  assert.equal(formatIngredient(eggs), "4 eggs");
+});
+
+test("scaleRecipe carries a discrete ingredient's rounding mode through scaling", () => {
+  const pancakes: Recipe = {
+    name: "pancakes",
+    servings: 4,
+    ingredients: [{ name: "", quantity: 2, unit: "egg", rounding: "whole" }],
+  };
+
+  // 4 -> 7 servings gives a factor of 1.75, and 2 * 1.75 = 3.5 eggs, which
+  // isn't a real quantity of eggs - it should round to a whole egg count.
+  const scaled = scaleRecipe(pancakes, 7);
+  assert.equal(formatIngredient(scaled.ingredients[0]), "4 eggs");
+});
+
 test("formatIngredient covers named amounts, unit-as-noun amounts, and to-taste amounts", () => {
   const cases: Array<{ description: string; ingredient: { name: string; quantity: number; unit: string }; expected: string }> = [
     {

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parseQuantity } from "../src/fraction.js";
+import { parseQuantity, roundToWholeUnit } from "../src/fraction.js";
 
 test("parseQuantity reads whole numbers and decimals", () => {
   assert.equal(parseQuantity("2"), 2);
@@ -21,6 +21,19 @@ test("parseQuantity reads unicode vulgar fractions, alone or attached to a whole
   assert.equal(parseQuantity("1½"), 1.5);
   assert.equal(parseQuantity("1 ½"), 1.5);
   assert.equal(parseQuantity("2¾"), 2.75);
+});
+
+test("roundToWholeUnit rounds to the nearest whole number", () => {
+  assert.equal(roundToWholeUnit(3.4), 3);
+  assert.equal(roundToWholeUnit(3.6), 4);
+  assert.equal(roundToWholeUnit(3.5), 4);
+  assert.equal(roundToWholeUnit(0), 0);
+});
+
+test("roundToWholeUnit rejects negative and non-finite values", () => {
+  assert.throws(() => roundToWholeUnit(-1), RangeError);
+  assert.throws(() => roundToWholeUnit(NaN), RangeError);
+  assert.throws(() => roundToWholeUnit(Infinity), RangeError);
 });
 
 test("parseQuantity rejects garbage and nonsensical fractions", () => {
