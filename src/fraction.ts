@@ -94,7 +94,7 @@ export function isPluralQuantity(mixed: MixedNumber): boolean {
 
 // Abbreviations and units that don't take an "s" in kitchen usage.
 const INVARIANT_UNITS = new Set([
-  "tsp", "tbsp", "g", "kg", "mg", "ml", "l", "oz", "lb", "qt", "pt", "gal", "cm", "in",
+  "tsp", "tbsp", "g", "kg", "mg", "ml", "l", "oz", "fl oz", "lb", "qt", "pt", "gal", "cm", "in",
 ]);
 
 export function pluralizeUnit(unit: string, plural: boolean): string {

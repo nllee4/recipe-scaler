@@ -8,6 +8,8 @@ import {
 
 export { roundToKitchenFraction, parseQuantity } from "./fraction.js";
 export type { MixedNumber } from "./fraction.js";
+export { convertQuantity, convertIngredientUnit, unitCategory } from "./units.js";
+export type { UnitCategory } from "./units.js";
 
 // Most ingredients scale in direct proportion to servings. A few don't:
 // - "sqrt" is for salt, spice heat, and leavening, where doubling a recipe

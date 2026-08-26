@@ -21,10 +21,11 @@ factor, but that falls apart in a few predictable ways:
   exactly one" — `1/2 cup` and `1 1/2 cups` are both idiomatic even
   though neither is a "normal" plural/singular split by value.
 
-This library handles the scaling math, fraction rounding, and reading a
-quantity out of the fraction strings recipes are usually written with. It
-leaves everything else (parsing a full recipe from text, unit conversion,
-UI) out of scope.
+This library handles the scaling math, fraction rounding, reading a
+quantity out of the fraction strings recipes are usually written with, and
+converting between units of the same kind. It leaves everything else
+(parsing a full recipe from text, converting volume to weight, UI) out of
+scope.
 
 ## Usage
 
@@ -100,6 +101,36 @@ ingredient to control how the final quantity is displayed:
 const eggs = { name: "", quantity: 2, unit: "egg", rounding: "whole" as const };
 formatIngredient({ ...eggs, quantity: 3.5 }); // "4 eggs", not "3 1/2 eggs"
 ```
+
+## Unit conversion
+
+`convertQuantity` converts between units of the same kind - volume to
+volume, or weight to weight:
+
+```ts
+import { convertQuantity } from "recipe-scaler";
+
+convertQuantity(1, "cup", "ml");   // 236.5882365
+convertQuantity(3, "tsp", "tbsp"); // 1
+convertQuantity(1, "lb", "oz");    // 16
+```
+
+Supported volume units: `ml`, `l`, `tsp`, `tbsp`, `fl oz`, `cup`, `pt`,
+`qt`, `gal`. Supported weight units: `g`, `kg`, `oz`, `lb`. `fl oz` and
+`oz` are kept separate since a fluid ounce and a weight ounce aren't the
+same unit.
+
+Converting volume to weight (or back) needs an ingredient's density, which
+this library doesn't have data for, so `convertQuantity` throws rather
+than guessing:
+
+```ts
+convertQuantity(1, "cup", "g"); // throws
+```
+
+`convertIngredientUnit(ingredient, toUnit)` applies the same conversion to
+a whole ingredient, returning a new ingredient with the quantity converted
+and the unit swapped.
 
 ## Development
 
