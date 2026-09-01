@@ -97,9 +97,27 @@ const INVARIANT_UNITS = new Set([
   "tsp", "tbsp", "g", "kg", "mg", "ml", "l", "oz", "fl oz", "lb", "qt", "pt", "gal", "cm", "in",
 ]);
 
+// Units whose plural the suffix rules below get wrong. "leaf"/"loaf" end in
+// "f" and turn into "-ves" rather than "-fs"; "potato"/"tomato" end in a
+// consonant + "o" and take "-es" rather than "-s". Both are common enough in
+// recipes (bay leaf, meatloaf, diced tomato) to be worth listing outright
+// instead of trying to grow the regexes to cover them.
+const IRREGULAR_PLURAL_UNITS: Readonly<Record<string, string>> = {
+  leaf: "leaves",
+  loaf: "loaves",
+  half: "halves",
+  knife: "knives",
+  potato: "potatoes",
+  tomato: "tomatoes",
+};
+
 export function pluralizeUnit(unit: string, plural: boolean): string {
   if (unit === "" || !plural || INVARIANT_UNITS.has(unit)) {
     return unit;
+  }
+  const irregular = IRREGULAR_PLURAL_UNITS[unit];
+  if (irregular) {
+    return irregular;
   }
   if (/[^aeiou]y$/i.test(unit)) {
     return `${unit.slice(0, -1)}ies`;

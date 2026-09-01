@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parseQuantity, roundToWholeUnit } from "../src/fraction.js";
+import { parseQuantity, roundToWholeUnit, pluralizeUnit } from "../src/fraction.js";
 
 test("parseQuantity reads whole numbers and decimals", () => {
   assert.equal(parseQuantity("2"), 2);
@@ -42,4 +42,33 @@ test("parseQuantity rejects garbage and nonsensical fractions", () => {
   assert.throws(() => parseQuantity("a cup"), Error);
   assert.throws(() => parseQuantity("1/0"), RangeError);
   assert.throws(() => parseQuantity("-1"), RangeError);
+});
+
+test("pluralizeUnit leaves an empty unit or a singular quantity untouched", () => {
+  assert.equal(pluralizeUnit("egg", false), "egg");
+  assert.equal(pluralizeUnit("", true), "");
+});
+
+test("pluralizeUnit never adds an s to abbreviations", () => {
+  assert.equal(pluralizeUnit("tsp", true), "tsp");
+  assert.equal(pluralizeUnit("g", true), "g");
+  assert.equal(pluralizeUnit("fl oz", true), "fl oz");
+});
+
+test("pluralizeUnit applies regular suffix rules", () => {
+  assert.equal(pluralizeUnit("egg", true), "eggs");
+  assert.equal(pluralizeUnit("clove", true), "cloves");
+  assert.equal(pluralizeUnit("berry", true), "berries");
+  assert.equal(pluralizeUnit("box", true), "boxes");
+  assert.equal(pluralizeUnit("dash", true), "dashes");
+  assert.equal(pluralizeUnit("pinch", true), "pinches");
+});
+
+test("pluralizeUnit special-cases units the suffix rules get wrong", () => {
+  assert.equal(pluralizeUnit("leaf", true), "leaves");
+  assert.equal(pluralizeUnit("loaf", true), "loaves");
+  assert.equal(pluralizeUnit("half", true), "halves");
+  assert.equal(pluralizeUnit("knife", true), "knives");
+  assert.equal(pluralizeUnit("potato", true), "potatoes");
+  assert.equal(pluralizeUnit("tomato", true), "tomatoes");
 });
