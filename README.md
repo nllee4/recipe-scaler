@@ -142,6 +142,10 @@ npm run build
 npm test
 ```
 
+## Changelog
+
+See [CHANGELOG.md](./CHANGELOG.md).
+
 ## License
 
 MIT, see [LICENSE](./LICENSE).
