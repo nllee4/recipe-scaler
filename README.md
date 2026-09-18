@@ -23,9 +23,8 @@ factor, but that falls apart in a few predictable ways:
 
 This library handles the scaling math, fraction rounding, reading a
 quantity out of the fraction strings recipes are usually written with, and
-converting between units of the same kind. It leaves everything else
-(parsing a full recipe from text, converting volume to weight, UI) out of
-scope.
+converting between units - including volume to weight, given a density. It
+leaves everything else (parsing a full recipe from text, UI) out of scope.
 
 ## Usage
 
@@ -120,17 +119,40 @@ Supported volume units: `ml`, `l`, `tsp`, `tbsp`, `fl oz`, `cup`, `pt`,
 `oz` are kept separate since a fluid ounce and a weight ounce aren't the
 same unit.
 
-Converting volume to weight (or back) needs an ingredient's density, which
-this library doesn't have data for, so `convertQuantity` throws rather
-than guessing:
+Converting volume to weight (or back) needs an ingredient's density, in
+grams per milliliter. Without one, `convertQuantity` throws rather than
+guessing:
 
 ```ts
-convertQuantity(1, "cup", "g"); // throws
+convertQuantity(1, "cup", "g");       // throws
+convertQuantity(1, "cup", "g", 0.53); // 125.39..., about as dense as flour
 ```
 
-`convertIngredientUnit(ingredient, toUnit)` applies the same conversion to
-a whole ingredient, returning a new ingredient with the quantity converted
-and the unit swapped.
+`densityOf(name)` looks up a small table of common ingredients (water,
+milk, flour, sugar, butter, oil, honey, salt, cocoa powder, rice, and a
+few others), case-insensitively:
+
+```ts
+import { densityOf } from "recipe-scaler";
+
+densityOf("All-Purpose Flour"); // 0.53
+densityOf("unobtanium");        // undefined
+```
+
+These are average values good enough for a home kitchen, not a lab -
+actual density varies with how packed an ingredient is, brand, and
+temperature.
+
+`convertIngredientUnit(ingredient, toUnit, gramsPerMilliliter?)` applies
+the same conversion to a whole ingredient, returning a new ingredient with
+the quantity converted and the unit swapped. When crossing volume and
+weight, an explicit `gramsPerMilliliter` wins; otherwise it falls back to
+`densityOf(ingredient.name)`, and still throws if neither is available:
+
+```ts
+convertIngredientUnit({ name: "all-purpose flour", quantity: 2, unit: "cup" }, "g");
+// { name: "all-purpose flour", quantity: 250.78..., unit: "g" }
+```
 
 ## Development
 

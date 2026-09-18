@@ -1,4 +1,5 @@
 import type { Ingredient } from "./index.js";
+import { densityOf } from "./density.js";
 
 export type UnitCategory = "volume" | "weight";
 
@@ -40,10 +41,15 @@ export function unitCategory(unit: string): UnitCategory | undefined {
 }
 
 // Converts between units of the same kind (volume-to-volume or
-// weight-to-weight). Converting volume to weight needs an ingredient's
-// density, which this library has no data for, so that stays out of scope
-// here rather than guessing.
-export function convertQuantity(quantity: number, fromUnit: string, toUnit: string): number {
+// weight-to-weight) unconditionally. Crossing volume and weight needs an
+// ingredient's density in grams per milliliter - without one, this throws
+// rather than guessing.
+export function convertQuantity(
+  quantity: number,
+  fromUnit: string,
+  toUnit: string,
+  gramsPerMilliliter?: number,
+): number {
   if (fromUnit === toUnit) {
     return quantity;
   }
@@ -56,21 +62,37 @@ export function convertQuantity(quantity: number, fromUnit: string, toUnit: stri
   if (!to) {
     throw new Error(`unknown unit: "${toUnit}"`);
   }
-  if (from.category !== to.category) {
+
+  const fromBase = quantity * from.toBase;
+
+  if (from.category === to.category) {
+    return fromBase / to.toBase;
+  }
+
+  if (gramsPerMilliliter === undefined) {
     throw new Error(
       `cannot convert "${fromUnit}" (${from.category}) to "${toUnit}" (${to.category}) without an ingredient density`,
     );
   }
+  if (!(gramsPerMilliliter > 0)) {
+    throw new RangeError(`gramsPerMilliliter must be greater than zero, got ${gramsPerMilliliter}`);
+  }
 
-  return (quantity * from.toBase) / to.toBase;
+  // fromBase is already in ml (volume) or g (weight); density is what
+  // bridges the two base units, in whichever direction is needed.
+  const toBase = from.category === "volume" ? fromBase * gramsPerMilliliter : fromBase / gramsPerMilliliter;
+  return toBase / to.toBase;
 }
 
-// Same conversion, applied to a whole ingredient. Scaling and rounding
-// mode carry over untouched since neither depends on which unit is used.
-export function convertIngredientUnit(ingredient: Ingredient, toUnit: string): Ingredient {
+// Same conversion, applied to a whole ingredient. Scaling and rounding mode
+// carry over untouched since neither depends on which unit is used. When
+// crossing volume and weight, an explicit gramsPerMilliliter wins; otherwise
+// this falls back to looking the ingredient's name up in the density table.
+export function convertIngredientUnit(ingredient: Ingredient, toUnit: string, gramsPerMilliliter?: number): Ingredient {
+  const density = gramsPerMilliliter ?? densityOf(ingredient.name);
   return {
     ...ingredient,
-    quantity: convertQuantity(ingredient.quantity, ingredient.unit, toUnit),
+    quantity: convertQuantity(ingredient.quantity, ingredient.unit, toUnit, density),
     unit: toUnit,
   };
 }

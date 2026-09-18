@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { convertQuantity, convertIngredientUnit, unitCategory } from "../src/units.js";
+import { densityOf } from "../src/density.js";
 
 // Conversion factors are irrational-looking decimals in practice, so
 // comparisons check "close enough for a kitchen", not bit-exact equality.
@@ -46,6 +47,21 @@ test("convertQuantity refuses to cross volume and weight without a density", () 
   assert.throws(() => convertQuantity(1, "cup", "g"), /density/);
 });
 
+test("convertQuantity crosses volume and weight when given a density", () => {
+  // water is exactly 1 g/ml, so 1 cup of it should come out to the cup's
+  // own ml figure.
+  assertClose(convertQuantity(1, "cup", "g", 1), 236.5882365, "1 cup of water in g");
+  assertClose(convertQuantity(236.5882365, "g", "cup", 1), 1, "236.588 g of water in cups");
+
+  // all-purpose flour is lighter than water, so the same volume weighs less.
+  assertClose(convertQuantity(1, "cup", "g", 0.53), 125.391765345, "1 cup of flour in g");
+});
+
+test("convertQuantity rejects a non-positive density", () => {
+  assert.throws(() => convertQuantity(1, "cup", "g", 0), RangeError);
+  assert.throws(() => convertQuantity(1, "cup", "g", -1), RangeError);
+});
+
 test("convertIngredientUnit converts quantity and swaps the unit, keeping everything else", () => {
   const flour = { name: "flour", quantity: 2, unit: "cup", scaling: "linear" as const };
   const converted = convertIngredientUnit(flour, "ml");
@@ -57,4 +73,29 @@ test("convertIngredientUnit converts quantity and swaps the unit, keeping everyt
   // the source ingredient must be untouched
   assert.equal(flour.unit, "cup");
   assert.equal(flour.quantity, 2);
+});
+
+test("convertIngredientUnit looks up density from the ingredient's name when crossing categories", () => {
+  const flour = { name: "all-purpose flour", quantity: 1, unit: "cup" };
+  const converted = convertIngredientUnit(flour, "g");
+  assertClose(converted.quantity, 125.391765345, "1 cup of all-purpose flour in g");
+});
+
+test("convertIngredientUnit prefers an explicit density over the name lookup", () => {
+  // named "water" but converted with honey's density instead
+  const water = { name: "water", quantity: 1, unit: "cup" };
+  const converted = convertIngredientUnit(water, "g", densityOf("honey"));
+  assertClose(converted.quantity, 236.5882365 * 1.42, "1 cup converted at honey's density");
+});
+
+test("convertIngredientUnit still throws when the name isn't in the density table", () => {
+  const mystery = { name: "smidgen of magic", quantity: 1, unit: "cup" };
+  assert.throws(() => convertIngredientUnit(mystery, "g"), /density/);
+});
+
+test("densityOf looks up known ingredients case-insensitively and trims whitespace", () => {
+  assert.equal(densityOf("water"), 1);
+  assert.equal(densityOf("  Honey "), 1.42);
+  assert.equal(densityOf("ALL-PURPOSE FLOUR"), 0.53);
+  assert.equal(densityOf("unobtanium"), undefined);
 });
