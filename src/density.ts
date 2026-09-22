@@ -22,6 +22,14 @@ const INGREDIENT_DENSITIES: Readonly<Record<string, number>> = {
   "kosher salt": 0.96,
   "cocoa powder": 0.51,
   rice: 0.78,
+  cornmeal: 0.58,
+  "coconut oil": 0.92,
+  "peanut butter": 1.1,
+  "sour cream": 1.01,
+  yogurt: 1.04,
+  buttermilk: 1.04,
+  "heavy cream": 0.98,
+  "cream cheese": 0.96,
 };
 
 // Looked up by an ingredient's name, case-insensitively and trimmed, since

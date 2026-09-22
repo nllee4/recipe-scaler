@@ -99,3 +99,14 @@ test("densityOf looks up known ingredients case-insensitively and trims whitespa
   assert.equal(densityOf("ALL-PURPOSE FLOUR"), 0.53);
   assert.equal(densityOf("unobtanium"), undefined);
 });
+
+test("densityOf covers common dairy, spreads, and baking ingredients", () => {
+  assert.equal(densityOf("cornmeal"), 0.58);
+  assert.equal(densityOf("coconut oil"), 0.92);
+  assert.equal(densityOf("peanut butter"), 1.1);
+  assert.equal(densityOf("sour cream"), 1.01);
+  assert.equal(densityOf("Yogurt"), 1.04);
+  assert.equal(densityOf("buttermilk"), 1.04);
+  assert.equal(densityOf("heavy cream"), 0.98);
+  assert.equal(densityOf("cream cheese"), 0.96);
+});

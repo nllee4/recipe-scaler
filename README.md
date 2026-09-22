@@ -129,8 +129,9 @@ convertQuantity(1, "cup", "g", 0.53); // 125.39..., about as dense as flour
 ```
 
 `densityOf(name)` looks up a small table of common ingredients (water,
-milk, flour, sugar, butter, oil, honey, salt, cocoa powder, rice, and a
-few others), case-insensitively:
+milk, flour, sugar, butter, oil, honey, salt, cocoa powder, rice, cornmeal,
+peanut butter, sour cream, yogurt, buttermilk, heavy cream, cream cheese,
+and a few others), case-insensitively:
 
 ```ts
 import { densityOf } from "recipe-scaler";

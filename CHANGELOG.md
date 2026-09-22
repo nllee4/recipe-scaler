@@ -8,7 +8,8 @@ All notable changes to this project are documented in this file.
 
 - `densityOf`, a lookup table of grams-per-milliliter figures for common
   cooking ingredients (water, milk, flour, sugar, butter, oil, honey, salt,
-  cocoa powder, rice, and a few others).
+  cocoa powder, rice, cornmeal, coconut oil, peanut butter, sour cream,
+  yogurt, buttermilk, heavy cream, cream cheese, and a few others).
 - `convertQuantity` and `convertIngredientUnit` now accept an optional
   density and can cross volume and weight when given one, instead of
   always throwing. `convertIngredientUnit` falls back to `densityOf` on
