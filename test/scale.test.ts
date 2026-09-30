@@ -9,6 +9,40 @@ import {
   type ScalingBehavior,
 } from "../src/index.js";
 
+test("scaleRecipe converts mapped units after scaling and leaves others alone", () => {
+  const recipe: Recipe = {
+    name: "bread",
+    servings: 2,
+    ingredients: [
+      { name: "bread flour", quantity: 2, unit: "cup" },
+      { name: "", quantity: 1, unit: "egg" },
+      { name: "water", quantity: 1, unit: "cup", scaling: "fixed" },
+      { name: "salt", quantity: 0, unit: "tsp" },
+    ],
+  };
+  const scaled = scaleRecipe(recipe, 4, { convertTo: { cup: "g", tsp: "ml" } });
+
+  // 4 cups of flour at 0.54 g/ml
+  assert.ok(Math.abs(scaled.ingredients[0].quantity - 4 * 236.5882365 * 0.54) < 1e-6);
+  assert.equal(scaled.ingredients[0].unit, "g");
+  assert.deepEqual(scaled.ingredients[1], { name: "", quantity: 2, unit: "egg" });
+  assert.ok(Math.abs(scaled.ingredients[2].quantity - 236.5882365) < 1e-6);
+  assert.equal(scaled.ingredients[3].quantity, 0);
+  assert.equal(scaled.ingredients[3].unit, "ml");
+
+  // the input recipe is untouched
+  assert.equal(recipe.ingredients[0].unit, "cup");
+});
+
+test("scaleRecipe throws when a mapped conversion has no density", () => {
+  const recipe: Recipe = {
+    name: "mystery",
+    servings: 1,
+    ingredients: [{ name: "smidgen of magic", quantity: 1, unit: "cup" }],
+  };
+  assert.throws(() => scaleRecipe(recipe, 2, { convertTo: { cup: "g" } }), /density/);
+});
+
 test("scaleQuantity handles each scaling behavior", () => {
   const cases: Array<{
     description: string;

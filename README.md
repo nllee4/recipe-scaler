@@ -155,6 +155,19 @@ convertIngredientUnit({ name: "all-purpose flour", quantity: 2, unit: "cup" }, "
 // { name: "all-purpose flour", quantity: 250.78..., unit: "g" }
 ```
 
+`scaleRecipe` can do the conversion in the same pass. Pass `convertTo`, a
+map from the unit as written to the unit you want. Ingredients in other
+units are left as they are:
+
+```ts
+scaleRecipe(pancakes, 6, { convertTo: { cup: "ml" } });
+// flour comes back as 709.76... ml; the eggs are still "3 egg"
+```
+
+Scaling happens first, then conversion. A mapping that crosses volume and
+weight looks up each ingredient's density by name and throws if there isn't
+one.
+
 ## Development
 
 There's no build step required to read the source; `src/index.ts` and

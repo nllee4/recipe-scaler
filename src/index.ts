@@ -5,6 +5,7 @@ import {
   isPluralQuantity,
   pluralizeUnit,
 } from "./fraction.js";
+import { convertIngredientUnit } from "./units.js";
 
 export { roundToKitchenFraction, parseQuantity } from "./fraction.js";
 export type { MixedNumber } from "./fraction.js";
@@ -58,7 +59,16 @@ export function scaleQuantity(quantity: number, factor: number, behavior: Scalin
   }
 }
 
-export function scaleRecipe(recipe: Recipe, targetServings: number): Recipe {
+export interface ScaleOptions {
+  // Maps a unit as written in the recipe to the unit it should come out in,
+  // e.g. { cup: "g", tbsp: "g" } for a recipe you want on a kitchen scale.
+  // Ingredients whose unit isn't a key (eggs, pinches) are left alone, so one
+  // map can cover a whole recipe. A mapping that crosses volume and weight
+  // uses each ingredient's name to find a density and throws if it can't.
+  convertTo?: Readonly<Record<string, string>>;
+}
+
+export function scaleRecipe(recipe: Recipe, targetServings: number, options: ScaleOptions = {}): Recipe {
   if (targetServings <= 0) {
     throw new RangeError("targetServings must be greater than zero");
   }
@@ -67,14 +77,25 @@ export function scaleRecipe(recipe: Recipe, targetServings: number): Recipe {
   }
 
   const factor = targetServings / recipe.servings;
+  const convertTo = options.convertTo ?? {};
 
   return {
     ...recipe,
     servings: targetServings,
-    ingredients: recipe.ingredients.map((ingredient) => ({
-      ...ingredient,
-      quantity: scaleQuantity(ingredient.quantity, factor, ingredient.scaling ?? "linear"),
-    })),
+    ingredients: recipe.ingredients.map((ingredient) => {
+      const scaled = {
+        ...ingredient,
+        quantity: scaleQuantity(ingredient.quantity, factor, ingredient.scaling ?? "linear"),
+      };
+      // Own-property check so a unit called "constructor" doesn't pick up
+      // something off Object.prototype.
+      const toUnit = Object.prototype.hasOwnProperty.call(convertTo, ingredient.unit)
+        ? convertTo[ingredient.unit]
+        : undefined;
+      // Converting after scaling keeps sqrt scaling working on the original
+      // quantity; a zero ("to taste") quantity converts to zero either way.
+      return toUnit === undefined ? scaled : convertIngredientUnit(scaled, toUnit);
+    }),
   };
 }
 

@@ -6,6 +6,8 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- `scaleRecipe` takes an optional `convertTo` map (unit as written to
+  target unit) and converts matching ingredients after scaling.
 - `densityOf`, a lookup table of grams-per-milliliter figures for common
   cooking ingredients (water, milk, flour, sugar, butter, oil, honey, salt,
   cocoa powder, rice, cornmeal, coconut oil, peanut butter, sour cream,
